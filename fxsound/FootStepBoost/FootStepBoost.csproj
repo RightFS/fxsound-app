@@ -10,11 +10,19 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="preset\test1.fac" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\..\FxWrapper\FxWrapper.vcxproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <Reference Include="System.Windows.Forms" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="preset\test1.fac" />
 	</ItemGroup>
 
 	<ItemGroup>

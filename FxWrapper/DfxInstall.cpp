@@ -16,7 +16,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "stdafx.h"
+#include "pch.h"
 #include "DfxInstall.h"
 #include <msiquery.h>
 #pragma comment(lib, "Msi.lib")
@@ -181,7 +181,6 @@ DfxInstall::DfxInstall(const wchar_t* working_dir, const wchar_t* version)
     CoInitialize(NULL);
 
     working_dir_ = working_dir;
-    //"14.1.0.0"
     version_ = version;
 
     SYSTEM_INFO sys_info;

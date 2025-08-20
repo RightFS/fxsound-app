@@ -99,7 +99,7 @@ namespace FootStepBoost
                 // Get available sound devices
                 _devices = _fxSoundApi.GetSoundDevices();
 
-                _devices.RemoveAll(d=>d.IsRealDevice == 0);
+                _devices.RemoveAll(d => d.IsRealDevice == 0);
                 // Clear the combo box
                 DevicesComboBox.Items.Clear();
 
@@ -162,51 +162,98 @@ namespace FootStepBoost
                 int numBands = _fxSoundApi.GetNumEqBands();
                 if (numBands <= 0) return;
 
-                // Set the initial state of the equalizer checkbox
+                // 设置均衡器复选框的初始状态
                 EqEnabledCheckBox.IsChecked = _fxSoundApi.IsPowerOn();
 
-                // Clear any existing bands
+                // 清除现有的频段
                 EqBandsPanel.Children.Clear();
 
-                // Create a vertical slider for each band
+                // 为每个频段创建控件
                 for (int i = 0; i < numBands; i++)
                 {
                     float freq = _fxSoundApi.GetEqBandFrequency(i);
                     float boost = _fxSoundApi.GetEqBandBoostCut(i);
+                    var range = _fxSoundApi.GetEqBandFrequencyRange(i);
 
                     StackPanel bandPanel = new StackPanel();
                     bandPanel.Margin = new Thickness(5);
-                    bandPanel.Width = 50;
+                    bandPanel.Width = 70; // 增加宽度以容纳新控件
 
-                    // Create the slider
-                    Slider slider = new Slider();
-                    slider.Orientation = Orientation.Vertical;
-                    slider.Minimum = -12;
-                    slider.Maximum = 12;
-                    slider.Value = boost;
-                    slider.Height = 150;
-                    slider.TickFrequency = 3;
-                    slider.TickPlacement = System.Windows.Controls.Primitives.TickPlacement.Both;
-                    slider.Tag = i; // Store the band number
-                    slider.ValueChanged += EqBandSlider_ValueChanged;
+                    // 创建增益/衰减滑块
+                    Slider boostSlider = new Slider();
+                    boostSlider.Orientation = Orientation.Vertical;
+                    boostSlider.Minimum = -12;
+                    boostSlider.Maximum = 12;
+                    boostSlider.Value = boost;
+                    boostSlider.Height = 150;
+                    boostSlider.TickFrequency = 3;
+                    boostSlider.TickPlacement = System.Windows.Controls.Primitives.TickPlacement.Both;
+                    boostSlider.Tag = i; // 存储频段编号
+                    boostSlider.ValueChanged += EqBandSlider_ValueChanged;
 
-                    // Create the frequency label
+                    // 创建频率标签
                     TextBlock freqLabel = new TextBlock();
                     freqLabel.Text = freq < 1000 ? $"{freq:F0} Hz" : $"{freq / 1000:F1} kHz";
                     freqLabel.HorizontalAlignment = HorizontalAlignment.Center;
+                    freqLabel.Tag = $"freqLabel_{i}";
 
-                    // Create the boost/cut value label
+                    // 创建增益/衰减值标签
                     TextBlock boostLabel = new TextBlock();
                     boostLabel.Text = $"{boost:F1} dB";
                     boostLabel.HorizontalAlignment = HorizontalAlignment.Center;
                     boostLabel.Tag = $"eqLabel_{i}";
 
-                    // Add controls to the panel
-                    bandPanel.Children.Add(boostLabel);
-                    bandPanel.Children.Add(slider);
-                    bandPanel.Children.Add(freqLabel);
+                    // 创建频率调整滑块（仅对非第一和最后一个频段显示，因为这些通常是固定的）
+                    if (i > 0 && i < numBands - 1)
+                    {
+                        Slider freqSlider = new Slider();
+                        freqSlider.Minimum = range.Min;
+                        freqSlider.Maximum = range.Max;
+                        freqSlider.Value = freq;
+                        freqSlider.Tag = $"freqSlider_{i}";
+                        freqSlider.Height = 22;
+                        freqSlider.Margin = new Thickness(0, 5, 0, 5);
 
-                    // Add the panel to the bands panel
+                        // 添加频率调整事件处理
+                        freqSlider.ValueChanged += (sender, e) => {
+                            if (sender is Slider slider && slider.Tag is string tag)
+                            {
+                                int bandIndex = int.Parse(tag.Split('_')[1]);
+                                float newFreq = (float)slider.Value;
+
+                                // 更新频率
+                                _fxSoundApi.SetEqBandFrequency(bandIndex, newFreq);
+
+                                // 更新频率标签
+                                foreach (UIElement element in bandPanel.Children)
+                                {
+                                    if (element is TextBlock tb && tb.Tag is string labelTag &&
+                                        labelTag == $"freqLabel_{bandIndex}")
+                                    {
+                                        tb.Text = newFreq < 1000 ? $"{newFreq:F0} Hz" : $"{newFreq / 1000:F1} kHz";
+                                        break;
+                                    }
+                                }
+
+                                StatusTextBlock.Text = $"EQ Band {bandIndex + 1} frequency set to {(newFreq < 1000 ? $"{newFreq:F0} Hz" : $"{newFreq / 1000:F1} kHz")}";
+                            }
+                        };
+
+                        // 添加控件到面板
+                        bandPanel.Children.Add(boostLabel);
+                        bandPanel.Children.Add(boostSlider);
+                        bandPanel.Children.Add(freqLabel);
+                        bandPanel.Children.Add(freqSlider);
+                    }
+                    else
+                    {
+                        // 第一个和最后一个频段只显示增益/衰减控件
+                        bandPanel.Children.Add(boostLabel);
+                        bandPanel.Children.Add(boostSlider);
+                        bandPanel.Children.Add(freqLabel);
+                    }
+
+                    // 添加面板到频段面板
                     EqBandsPanel.Children.Add(bandPanel);
                 }
             }
@@ -215,7 +262,6 @@ namespace FootStepBoost
                 StatusTextBlock.Text = $"Error setting up equalizer: {ex.Message}";
             }
         }
-
         private void OnDeviceChanged(List<FxSoundDotNet.FxSoundDevice> devices)
         {
             // This is called from a background thread, so we need to invoke on the UI thread
@@ -357,7 +403,67 @@ namespace FootStepBoost
             _fxSoundApi.EqOn(enabled);
             StatusTextBlock.Text = enabled ? "Equalizer enabled" : "Equalizer disabled";
         }
+        // 新增方法：从预设更新 EQ 控件
+        private void UpdateEqControlsFromPreset()
+        {
+            if (_fxSoundApi == null) return;
 
+            try
+            {
+                int numBands = _fxSoundApi.GetNumEqBands();
+                if (numBands <= 0) return;
+
+                // 更新均衡器启用状态
+                EqEnabledCheckBox.IsChecked = true;
+
+                // 更新每个频段的控件
+                for (int i = 0; i < numBands; i++)
+                {
+                    float freq = _fxSoundApi.GetEqBandFrequency(i);
+                    float boost = _fxSoundApi.GetEqBandBoostCut(i);
+
+                    // 在 EqBandsPanel 中查找对应的频段面板
+                    foreach (UIElement element in EqBandsPanel.Children)
+                    {
+                        if (element is StackPanel bandPanel)
+                        {
+                            // 查找带有对应 Tag 的滑块
+                            foreach (UIElement child in bandPanel.Children)
+                            {
+                                if (child is Slider slider && slider.Tag is int tag && tag == i)
+                                {
+                                    // 更新滑块值
+                                    slider.Value = boost;
+
+                                    // 更新频率和增益/衰减标签
+                                    foreach (UIElement labelElement in bandPanel.Children)
+                                    {
+                                        if (labelElement is TextBlock tb)
+                                        {
+                                            if (tb.Tag != null && tb.Tag.ToString() == $"eqLabel_{i}")
+                                            {
+                                                // 更新增益/衰减标签
+                                                tb.Text = $"{boost:F1} dB";
+                                            }
+                                            else if (!tb.Text.Contains("dB"))
+                                            {
+                                                // 更新频率标签
+                                                tb.Text = freq < 1000 ? $"{freq:F0} Hz" : $"{freq / 1000:F1} kHz";
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                StatusTextBlock.Text = $"Error updating EQ controls: {ex.Message}";
+            }
+        }
         private void LoadPresetButton_Click(object sender, RoutedEventArgs e)
         {
             if (_fxSoundApi == null) return;
@@ -375,6 +481,9 @@ namespace FootStepBoost
                     {
                         StatusTextBlock.Text = "Preset loaded successfully";
                         UpdateEffectSliders();
+
+                        // 重要：添加对 EQ 控件的更新
+                        UpdateEqControlsFromPreset();
                     }
                     else
                     {

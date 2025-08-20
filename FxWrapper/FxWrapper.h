@@ -161,6 +161,11 @@ FXWRAPPER_API void FxFreeString(wchar_t* str);
 // Free allocated memory for a preset
 FXWRAPPER_API void FxFreePreset(FxPreset* preset);
 
+FXWRAPPER_API int FxInstallDriverWin10(wchar_t* work_dir);
+
+FXWRAPPER_API int FxUninstallDriverWin10(wchar_t* work_dir);
+
+FXWRAPPER_API const char* FxGetInstallLog();
 #ifdef __cplusplus
 }
 #endif
