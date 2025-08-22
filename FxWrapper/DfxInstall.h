@@ -106,7 +106,7 @@ public:
     bool UninstallFxSoundDriver(std::string& log);
 	bool CreateUpdateTask(std::string& log);
 	bool DeleteUpdateTask(std::string& log);
-	bool FindDFXDriver(const std::wstring& version);
+	bool FindDFXDriver(const std::wstring& dev_id,const std::wstring& version);
 
 private:
 	static constexpr wchar_t DRIVERS_FOLDER[] = L"Drivers\\";

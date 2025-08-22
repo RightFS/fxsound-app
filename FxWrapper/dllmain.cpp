@@ -460,14 +460,14 @@ FXWRAPPER_API void FxFreePreset(FxPreset* preset)
 #include "DfxInstall.h"
 std::string output;
 auto const version = L"14.1.0.0";
+const wchar_t* fxvad_id = L"Root\\FXVAD";
 
 FXWRAPPER_API int FxInstallDriverWin10(wchar_t* work_dir) {
-	const wchar_t* fxvad_id = L"Root\\FXVAD";
 	std::wstring inf(work_dir);
 	inf.append(L"\\Drivers\\win10\\x64\\fxvad.inf");
-	
+
 	DfxInstall dfx_install(work_dir, version);
-	if (!dfx_install.FindDFXDriver(version)) {
+	if (!dfx_install.FindDFXDriver(fxvad_id, version)) {
 		return cmdInstall(NULL, NULL, 0, inf.c_str(), fxvad_id);
 	}
 	return 0;
@@ -475,8 +475,8 @@ FXWRAPPER_API int FxInstallDriverWin10(wchar_t* work_dir) {
 
 FXWRAPPER_API int FxUninstallDriverWin10(wchar_t* work_dir) {
 	DfxInstall dfx_install(work_dir, version);
-	if (!dfx_install.UninstallDFXDriver(output)) {
-		return FX_ERROR_GENERAL;
+	if (dfx_install.FindDFXDriver(fxvad_id, version)) {
+		return cmdRemove(NULL, NULL, fxvad_id);
 	}
 	return 0;
 }

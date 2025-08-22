@@ -1096,8 +1096,6 @@ std::wstring DfxInstall::GetAudioOutputName(IMMDevice* p_device)
 
     return device_name;
 }
-
-int cmdInstall(_In_opt_ LPCTSTR BaseName, _In_opt_ LPCTSTR Machine, _In_ DWORD Flags, _In_  LPCTSTR inf, _In_  LPCTSTR hwid)
 /*++
 
 Routine Description:
@@ -1117,6 +1115,7 @@ Return Value:
     EXIT_xxxx
 
 --*/
+int cmdInstall(_In_opt_ LPCTSTR BaseName, _In_opt_ LPCTSTR Machine, _In_ DWORD Flags, _In_  LPCTSTR inf, _In_  LPCTSTR hwid)
 {
     HDEVINFO DeviceInfoSet = INVALID_HANDLE_VALUE;
     SP_DEVINFO_DATA DeviceInfoData;
@@ -1230,8 +1229,6 @@ Return Value:
 
     return failcode;
 }
-
-int cmdUpdate(_In_opt_ LPCTSTR BaseName, _In_opt_ LPCTSTR Machine, _In_ DWORD Flags, _In_  LPCTSTR inf, _In_  LPCTSTR hwid)
 /*++
 
 Routine Description:
@@ -1250,6 +1247,7 @@ Return Value:
     EXIT_xxxx
 
 --*/
+int cmdUpdate(_In_opt_ LPCTSTR BaseName, _In_opt_ LPCTSTR Machine, _In_ DWORD Flags, _In_  LPCTSTR inf, _In_  LPCTSTR hwid)
 {
     HMODULE newdevMod = NULL;
     int failcode = EXIT_FAIL;

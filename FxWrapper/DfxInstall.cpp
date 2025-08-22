@@ -791,7 +791,7 @@ bool DfxInstall::CmdExec(const std::wstring& cmd_str, const std::wstring& workin
     return true;
 }
 
-bool DfxInstall::FindDFXDriver(const std::wstring& version)
+bool DfxInstall::FindDFXDriver(const std::wstring& dev_id, const std::wstring& version)
 {
     HRESULT h_res;
     IWbemLocator* wbem_loc = NULL;
@@ -851,7 +851,7 @@ bool DfxInstall::FindDFXDriver(const std::wstring& version)
         h_res = wbem_obj->Get(L"HardWareID", 0, &vt_prop, 0, 0);
         if (SUCCEEDED(h_res) && (V_VT(&vt_prop) == VT_BSTR))
         {
-            if (wcscmp(vt_prop.bstrVal, L"*DFX12") == 0)
+            if (wcscmp(vt_prop.bstrVal, dev_id.c_str()) == 0)
             {
                 dfx_found = true;
             }
